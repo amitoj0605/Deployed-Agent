@@ -18,9 +18,11 @@ response_model = ChatGroq(
 GENERATE_PROMPT = (
     "You are an assistant for question-answering tasks. "
     "Use the following retrieved context to answer the question. "
-    "If the answer is not contained in the context, say you don't know. "
+    "If the answer is not in the context, say you don't know. "
+    "If the question is a follow-up, use conversation history to understand context. "
     "Keep the answer concise (max three sentences).\n\n"
     "Question: {question}\n\n"
+    "Conversation history:\n{history}\n\n"
     "Context:\n{context}"
 )
 

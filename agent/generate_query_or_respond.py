@@ -21,10 +21,12 @@ response_model = ChatGroq(
 def generate_query_or_respond(state: MessagesState):
     """
     Decide whether to answer directly or call the retriever tool.
+    Receives full conversation history via state["messages"] for memory.
     """
     system_prompt = SystemMessage(
         content=(
             "You are an AI assistant with a retriever_tool to search a knowledge base.\n"
+            "You have access to the conversation history — use it to understand follow-up questions.\n"
             "ALWAYS call retriever_tool for ANY question about AI, agents, RAG, "
             "agentic AI, generative AI, or any factual topic.\n"
             "Only respond directly for greetings or purely conversational messages."

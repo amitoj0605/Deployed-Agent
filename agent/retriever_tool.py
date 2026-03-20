@@ -34,6 +34,7 @@ def retriever_tool(query: str):
     log(f"Retrieval latency: {retrieval_time:.2f}s")
 
     cleaned_chunks = []
+    sources = []
 
     for i, doc in enumerate(docs):
 
@@ -44,7 +45,13 @@ def retriever_tool(query: str):
 
         cleaned_chunks.append(text)
 
+        # Extract source — use metadata["source"] if available, else "Local Document"
+        source = doc.metadata.get("source", "Local Document")
+        if source not in sources:
+            sources.append(source)
+
     return {
         "chunks": cleaned_chunks,
-        "text": "\n\n".join(cleaned_chunks)
+        "text": "\n\n".join(cleaned_chunks),
+        "sources": sources   # list of unique source URLs/file paths
     }
