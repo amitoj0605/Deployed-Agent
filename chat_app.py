@@ -1,6 +1,9 @@
 import streamlit as st
 from langchain_core.messages import HumanMessage, AIMessage
-from langchain_ollama import ChatOllama
+import os
+from langchain_groq import ChatGroq
+from dotenv import load_dotenv
+load_dotenv()
 from utils.logger import log
 import time
 
@@ -76,6 +79,13 @@ section[data-testid="stSidebar"] {
 }
 
 /* ── HEADER BANNER ── */
+.agent-byline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #475569;
+    letter-spacing: 1.5px;
+    margin-top: 2px;
+}
 .agent-header {
     display: flex;
     align-items: center;
@@ -113,6 +123,13 @@ section[data-testid="stSidebar"] {
     color: #6366f1;
     letter-spacing: 2px;
     text-transform: uppercase;
+}
+.agent-byline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #475569;
+    letter-spacing: 1px;
+    margin-top: 2px;
 }
 .agent-status-pill {
     margin-left: auto;
@@ -314,11 +331,28 @@ hr {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     color: #64748b;
-    cursor: default;
+    cursor: pointer;
 }
 .suggestion-chip:hover {
     border-color: #6366f1;
     color: #a5b4fc;
+}
+
+/* ── Suggestion buttons styled as chips ── */
+div[data-testid="stHorizontalBlock"] button {
+    background: #0f172a !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 20px !important;
+    color: #64748b !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 11px !important;
+    padding: 6px 14px !important;
+    transition: all 0.2s !important;
+}
+div[data-testid="stHorizontalBlock"] button:hover {
+    border-color: #6366f1 !important;
+    color: #a5b4fc !important;
+    background: #1e1b4b !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -334,10 +368,11 @@ def load_graph():
 
 @st.cache_resource
 def load_streaming_llm():
-    return ChatOllama(
-        model="qwen2.5:1.5b",
+    return ChatGroq(
+        model="llama-3.1-8b-instant",
         temperature=0,
-        num_predict=150,
+        max_tokens=300,
+        api_key=os.getenv("GROQ_API_KEY")
     )
 
 app = load_graph()
@@ -355,6 +390,12 @@ if "query_count" not in st.session_state:
     st.session_state.query_count = 0
 if "retrieval_count" not in st.session_state:
     st.session_state.retrieval_count = 0
+if "full_messages" not in st.session_state:
+    # Stores actual LangChain message objects for conversation memory
+    # Sliding window of last 10 messages to stay within LLM context limits
+    st.session_state.full_messages = []
+if "selected_suggestion" not in st.session_state:
+    st.session_state.selected_suggestion = None
 
 # -----------------------------
 # SIDEBAR
@@ -377,6 +418,8 @@ with st.sidebar:
         st.session_state.debug_logs = []
         st.session_state.query_count = 0
         st.session_state.retrieval_count = 0
+        st.session_state.full_messages = []
+        st.session_state.selected_suggestion = None
         st.rerun()
 
     st.divider()
@@ -414,6 +457,7 @@ st.markdown("""
     <div class="agent-title-block">
         <div class="agent-title">AgentRAG</div>
         <div class="agent-subtitle">Retrieval-Augmented Intelligence</div>
+        <div class="agent-byline">Built by Amitoj Singh</div>
     </div>
     <div class="agent-status-pill">● ONLINE</div>
 </div>
@@ -432,6 +476,13 @@ def ui_log(message: str):
 # CHAT HISTORY or WELCOME SCREEN
 # -----------------------------
 
+SUGGESTIONS = [
+    "What is agentic AI?",
+    "How does RAG work?",
+    "Agentic vs Generative AI",
+    "What are AI agents?",
+]
+
 if not st.session_state.chat_history:
     st.markdown("""
     <div class="welcome-wrap">
@@ -441,14 +492,16 @@ if not st.session_state.chat_history:
             I retrieve answers from your knowledge base using FAISS vector search
             and local LLMs. No cloud. No data leaving your machine.
         </div>
-        <div class="suggestion-row">
-            <div class="suggestion-chip">What is agentic AI?</div>
-            <div class="suggestion-chip">How does RAG work?</div>
-            <div class="suggestion-chip">Agentic vs Generative AI</div>
-            <div class="suggestion-chip">What are AI agents?</div>
-        </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # Clickable suggestion buttons styled as chips
+    cols = st.columns(len(SUGGESTIONS))
+    for i, suggestion in enumerate(SUGGESTIONS):
+        with cols[i]:
+            if st.button(suggestion, key=f"suggestion_{i}", use_container_width=True):
+                st.session_state.selected_suggestion = suggestion
+                st.rerun()
 else:
     for role, message in st.session_state.chat_history:
         with st.chat_message(role):
@@ -458,13 +511,21 @@ else:
 # USER INPUT & STREAMING RESPONSE
 # -----------------------------
 
-prompt = st.chat_input("Ask anything about your knowledge base...")
+# Handle suggestion chip click
+if st.session_state.selected_suggestion:
+    prompt = st.session_state.selected_suggestion
+    st.session_state.selected_suggestion = None
+else:
+    prompt = st.chat_input("Ask anything about your knowledge base...")
 
 if prompt:
 
     # Clear welcome screen by adding to history
     st.session_state.chat_history.append(("user", prompt))
     st.session_state.query_count += 1
+
+    # Add current question to conversation memory
+    st.session_state.full_messages.append(HumanMessage(content=prompt))
 
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -475,8 +536,15 @@ if prompt:
         with st.status("⬡  Routing query through agent graph...", expanded=False) as status:
             ui_log("Graph invoked — routing query")
 
+            # Pass last 10 messages for conversation memory
+            # Sliding window prevents exceeding LLM context limits
+            memory_window = st.session_state.full_messages[-10:]
+            ui_log(f"Memory: {len(memory_window)} messages in context")
+
             result = app.invoke({
-                "messages": [HumanMessage(content=prompt)]
+                "messages": memory_window,
+                "doc_grade": None,
+                "rewrite_count": 0
             })
 
             status.update(label="✅  Graph complete", state="complete")
@@ -484,6 +552,7 @@ if prompt:
 
         # ── Step 2: Extract context ──
         context = ""
+        sources = []
         retrieved = False
 
         for msg in result["messages"]:
@@ -494,12 +563,20 @@ if prompt:
                     parsed = ast.literal_eval(raw)
                     context = parsed.get("text", "")
                     num_chunks = len(parsed.get("chunks", []))
+                    sources = parsed.get("sources", [])
+                    chunks = parsed.get("chunks", [])
                     retrieved = True
                     st.session_state.retrieval_count += 1
                     ui_log(f"Retrieval triggered — {num_chunks} chunks fetched")
+                    ui_log(f"Sources: {sources}")
                     ui_log(f"Context length: {len(context)} chars")
+                    # Log each chunk preview in debug panel
+                    for ci, chunk in enumerate(chunks):
+                        preview = chunk[:120].replace("\n", " ")
+                        ui_log(f"  Chunk {ci+1}: {preview}...")
                 except Exception:
                     context = raw
+                    sources = []
                     retrieved = True
                     st.session_state.retrieval_count += 1
                     ui_log(f"Retrieval triggered — context length: {len(context)} chars")
@@ -511,8 +588,17 @@ if prompt:
         # ── Step 3: Stream answer ──
         if context:
             from agent.generate_answer import GENERATE_PROMPT
+
+            # Build conversation history string from last 6 messages (3 exchanges)
+            history_msgs = st.session_state.full_messages[-7:-1]  # exclude current question
+            history = "\n".join([
+                f"{'User' if isinstance(m, HumanMessage) else 'Assistant'}: {m.content}"
+                for m in history_msgs
+            ]) if history_msgs else "No previous conversation."
+
             stream_prompt = GENERATE_PROMPT.format(
                 question=prompt,
+                history=history,
                 context=context[:1200]
             )
             ui_log("Streaming answer from retrieved context...")
@@ -529,9 +615,39 @@ if prompt:
                 if chunk.content
             )
 
+        # ── Show source citations below answer ──
+        if sources:
+            st.markdown(
+                "<div style='margin-top:12px;padding-top:8px;border-top:1px solid #1e293b;'>"
+                "<span style='font-family:JetBrains Mono,monospace;font-size:10px;"
+                "color:#475569;letter-spacing:1px;text-transform:uppercase;'>Sources</span>"
+                "</div>",
+                unsafe_allow_html=True
+            )
+            for src in sources:
+                # Show as link if URL, plain text if local file
+                if src.startswith("http"):
+                    # Extract domain name for display
+                    from urllib.parse import urlparse
+                    domain = urlparse(src).netloc.replace("www.", "")
+                    st.markdown(
+                        f"<a href='{src}' target='_blank' style='font-family:JetBrains Mono,monospace;"
+                        f"font-size:10px;color:#6366f1;text-decoration:none;display:block;"
+                        f"margin-top:4px;'>⬡ {domain}</a>",
+                        unsafe_allow_html=True
+                    )
+                else:
+                    st.markdown(
+                        f"<span style='font-family:JetBrains Mono,monospace;font-size:10px;"
+                        f"color:#475569;display:block;margin-top:4px;'>⬡ {src}</span>",
+                        unsafe_allow_html=True
+                    )
+
         ui_log("Answer complete")
         render_logs()
 
-    st.session_state.chat_history.append(
-        ("assistant", ai_message or "I couldn't generate a response.")
-    )
+    final_answer = ai_message or "I couldn't generate a response."
+    st.session_state.chat_history.append(("assistant", final_answer))
+
+    # Add AI response to conversation memory
+    st.session_state.full_messages.append(AIMessage(content=final_answer))
