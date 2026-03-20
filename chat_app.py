@@ -396,6 +396,9 @@ if "full_messages" not in st.session_state:
     st.session_state.full_messages = []
 if "selected_suggestion" not in st.session_state:
     st.session_state.selected_suggestion = None
+if "uploaded_files" not in st.session_state:
+    # Tracks filenames already indexed — prevents duplicate ingestion
+    st.session_state.uploaded_files = set()
 
 # -----------------------------
 # SIDEBAR
@@ -420,10 +423,81 @@ with st.sidebar:
         st.session_state.retrieval_count = 0
         st.session_state.full_messages = []
         st.session_state.selected_suggestion = None
+        st.session_state.uploaded_files = set()
         st.rerun()
 
     st.divider()
 
+    st.divider()
+    st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:11px;color:#6366f1;letter-spacing:2px;text-transform:uppercase;margin:4px 0 8px 0;">📁 Upload Documents</p>', unsafe_allow_html=True)
+
+    uploaded = st.file_uploader(
+        "Upload PDF or TXT",
+        type=["pdf", "txt"],
+        accept_multiple_files=True,
+        label_visibility="collapsed"
+    )
+
+    if uploaded:
+        from split.splitter import split_documents
+        from langchain_core.documents import Document
+        from agent.retriever_tool import get_retriever
+        import tempfile, os
+
+        new_files = [f for f in uploaded if f.name not in st.session_state.uploaded_files]
+
+        if new_files:
+            with st.spinner(f"Indexing {len(new_files)} file(s)..."):
+                all_new_docs = []
+                for file in new_files:
+                    try:
+                        # Save uploaded file to temp location
+                        suffix = ".pdf" if file.name.endswith(".pdf") else ".txt"
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                            tmp.write(file.read())
+                            tmp_path = tmp.name
+
+                        # Load using appropriate loader
+                        if suffix == ".pdf":
+                            from langchain_community.document_loaders import PyPDFLoader
+                            loader = PyPDFLoader(tmp_path)
+                        else:
+                            from langchain_community.document_loaders import TextLoader
+                            loader = TextLoader(tmp_path)
+
+                        docs = loader.load()
+
+                        # Set source metadata to original filename
+                        for doc in docs:
+                            doc.metadata["source"] = file.name
+
+                        all_new_docs.extend(docs)
+                        os.unlink(tmp_path)  # clean up temp file
+
+                    except Exception as e:
+                        st.error(f"Failed to load {file.name}: {e}")
+
+                if all_new_docs:
+                    # Split into chunks
+                    chunks = split_documents(all_new_docs)
+
+                    # Append to existing FAISS index
+                    retriever_instance = get_retriever()
+                    added = retriever_instance.add_documents(chunks)
+
+                    # Mark files as indexed
+                    for file in new_files:
+                        st.session_state.uploaded_files.add(file.name)
+
+                    st.success(f"✅ Indexed {added} chunks from {len(new_files)} file(s)")
+
+    # Show already indexed files
+    if st.session_state.uploaded_files:
+        st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:10px;color:#475569;margin:4px 0;">Indexed files:</p>', unsafe_allow_html=True)
+        for fname in st.session_state.uploaded_files:
+            st.markdown(f'<p style="font-family:JetBrains Mono,monospace;font-size:10px;color:#4ade80;margin:2px 0;">⬡ {fname}</p>', unsafe_allow_html=True)
+
+    st.divider()
     st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:11px;color:#6366f1;letter-spacing:2px;text-transform:uppercase;margin:4px 0 8px 0;">📋 Terminal Logs</p>', unsafe_allow_html=True)
     log_placeholder = st.empty()
 
@@ -536,9 +610,25 @@ if prompt:
         with st.status("⬡  Routing query through agent graph...", expanded=False) as status:
             ui_log("Graph invoked — routing query")
 
-            # Pass last 10 messages for conversation memory
-            # Sliding window prevents exceeding LLM context limits
-            memory_window = st.session_state.full_messages[-10:]
+            # Build clean memory window for Groq tool calling
+            # Groq fails if history contains:
+            # 1. ToolMessages (raw retrieval results)
+            # 2. AIMessages with tool_calls (prior routing decisions)
+            # Only pass plain HumanMessages and plain AIMessages (text only)
+            from langchain_core.messages import ToolMessage
+            clean_history = []
+            for m in st.session_state.full_messages[-10:]:
+                if isinstance(m, ToolMessage):
+                    continue  # skip tool results
+                if isinstance(m, AIMessage) and m.tool_calls:
+                    continue  # skip AI messages that contain tool calls
+                clean_history.append(m)
+
+            # Always ensure current question is the last message
+            if not clean_history or clean_history[-1].content != prompt:
+                clean_history.append(HumanMessage(content=prompt))
+
+            memory_window = clean_history
             ui_log(f"Memory: {len(memory_window)} messages in context")
 
             result = app.invoke({
