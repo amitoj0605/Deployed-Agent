@@ -354,6 +354,176 @@ div[data-testid="stHorizontalBlock"] button:hover {
     color: #a5b4fc !important;
     background: #1e1b4b !important;
 }
+
+/* ── Header compact ── */
+.agent-header {
+    padding: 16px 8px 12px 8px !important;
+    margin-bottom: 16px !important;
+}
+
+/* ── User chat bubble ── */
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+    background: #0f0f1a !important;
+    border: 1px solid #1e1b4b !important;
+    border-radius: 12px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 8px !important;
+}
+
+/* ── Assistant chat bubble ── */
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
+    background: #0a0a14 !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 12px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 8px !important;
+}
+
+/* ── Fix chat input border — remove pink/red ── */
+[data-testid="stChatInput"] textarea {
+    background: #111827 !important;
+    color: #e2e8f0 !important;
+    border: none !important;
+    font-family: 'Syne', sans-serif !important;
+}
+[data-testid="stBottom"] {
+    background: #0a0a0f !important;
+    border-top: 1px solid #1e293b !important;
+    padding-top: 8px !important;
+}
+div[data-testid="stChatInput"] {
+    border: 1px solid #374151 !important;
+    border-radius: 12px !important;
+    background: #111827 !important;
+}
+div[data-testid="stChatInput"]:focus-within {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.15) !important;
+}
+
+/* ── File uploader — dark themed ── */
+[data-testid="stFileUploader"] {
+    background: #0f172a !important;
+    border: 1px dashed #1e293b !important;
+    border-radius: 10px !important;
+    padding: 8px !important;
+}
+[data-testid="stFileUploader"] section {
+    background: transparent !important;
+    border: none !important;
+    padding: 8px !important;
+}
+[data-testid="stFileUploader"] section > div {
+    background: transparent !important;
+}
+[data-testid="stFileUploader"] span {
+    color: #475569 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 10px !important;
+}
+[data-testid="stFileUploaderDropzoneInstructions"] {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 10px !important;
+    color: #475569 !important;
+}
+[data-testid="stFileUploaderDropzoneInstructions"] span {
+    font-size: 10px !important;
+}
+/* Browse files button */
+[data-testid="stFileUploaderDropzone"] button {
+    background: #1e1b4b !important;
+    border: 1px solid #312e81 !important;
+    color: #a5b4fc !important;
+    font-size: 10px !important;
+    padding: 4px 12px !important;
+    border-radius: 6px !important;
+}
+/* Uploaded file pill */
+[data-testid="stFileUploaderFile"] {
+    background: #0f172a !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 6px !important;
+}
+[data-testid="stFileUploaderFileName"] {
+    color: #a5b4fc !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 10px !important;
+}
+[data-testid="stFileUploaderFileData"] {
+    color: #475569 !important;
+    font-size: 9px !important;
+}
+
+/* ── Source citations ── */
+.source-section {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #1e293b;
+}
+.source-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #334155;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.source-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #6366f1;
+    text-decoration: none;
+    display: inline-block;
+    margin-right: 12px;
+    margin-top: 2px;
+    transition: color 0.2s;
+}
+.source-link:hover { color: #a5b4fc; }
+.source-file {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #475569;
+    display: inline-block;
+    margin-right: 12px;
+    margin-top: 2px;
+}
+
+/* ── Query history buttons ── */
+[data-testid="stSidebar"] [data-testid="stButton"] button[kind="secondary"] {
+    background: transparent !important;
+    border: 1px solid #1e293b !important;
+    color: #64748b !important;
+    font-size: 10px !important;
+    text-align: left !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    margin-bottom: 3px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+[data-testid="stSidebar"] [data-testid="stButton"] button[kind="secondary"]:hover {
+    border-color: #6366f1 !important;
+    color: #a5b4fc !important;
+    background: #0f0f1a !important;
+}
+
+/* ── Download button ── */
+[data-testid="stDownloadButton"] button {
+    background: #0f172a !important;
+    border: 1px solid #1e293b !important;
+    color: #64748b !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 10px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s !important;
+    width: 100% !important;
+}
+[data-testid="stDownloadButton"] button:hover {
+    border-color: #6366f1 !important;
+    color: #a5b4fc !important;
+    background: #1e1b4b !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -396,6 +566,12 @@ if "full_messages" not in st.session_state:
     st.session_state.full_messages = []
 if "selected_suggestion" not in st.session_state:
     st.session_state.selected_suggestion = None
+if "uploaded_files" not in st.session_state:
+    # Tracks filenames already indexed — prevents duplicate ingestion
+    st.session_state.uploaded_files = set()
+if "query_history" not in st.session_state:
+    # Stores last 10 queries for quick re-run from sidebar
+    st.session_state.query_history = []
 
 # -----------------------------
 # SIDEBAR
@@ -420,10 +596,118 @@ with st.sidebar:
         st.session_state.retrieval_count = 0
         st.session_state.full_messages = []
         st.session_state.selected_suggestion = None
+        st.session_state.uploaded_files = set()
+        st.session_state.query_history = []
         st.rerun()
 
     st.divider()
 
+    st.divider()
+    st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:11px;color:#6366f1;letter-spacing:2px;text-transform:uppercase;margin:4px 0 8px 0;">📁 Upload Documents</p>', unsafe_allow_html=True)
+
+    uploaded = st.file_uploader(
+        "Upload PDF or TXT",
+        type=["pdf", "txt"],
+        accept_multiple_files=True,
+        label_visibility="collapsed"
+    )
+
+    if uploaded:
+        from split.splitter import split_documents
+        from langchain_core.documents import Document
+        from agent.retriever_tool import get_retriever
+        import tempfile, os
+
+        new_files = [f for f in uploaded if f.name not in st.session_state.uploaded_files]
+
+        if new_files:
+            with st.spinner(f"Indexing {len(new_files)} file(s)..."):
+                all_new_docs = []
+                for file in new_files:
+                    try:
+                        # Save uploaded file to temp location
+                        suffix = ".pdf" if file.name.endswith(".pdf") else ".txt"
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                            tmp.write(file.read())
+                            tmp_path = tmp.name
+
+                        # Load using appropriate loader
+                        if suffix == ".pdf":
+                            from langchain_community.document_loaders import PyPDFLoader
+                            loader = PyPDFLoader(tmp_path)
+                        else:
+                            from langchain_community.document_loaders import TextLoader
+                            loader = TextLoader(tmp_path)
+
+                        docs = loader.load()
+
+                        # Set source metadata to original filename
+                        for doc in docs:
+                            doc.metadata["source"] = file.name
+
+                        all_new_docs.extend(docs)
+                        os.unlink(tmp_path)  # clean up temp file
+
+                    except Exception as e:
+                        st.error(f"Failed to load {file.name}: {e}")
+
+                if all_new_docs:
+                    # Split into chunks
+                    chunks = split_documents(all_new_docs)
+
+                    # Append to existing FAISS index
+                    retriever_instance = get_retriever()
+                    added = retriever_instance.add_documents(chunks)
+
+                    # Mark files as indexed
+                    for file in new_files:
+                        st.session_state.uploaded_files.add(file.name)
+
+                    st.success(f"✅ Indexed {added} chunks from {len(new_files)} file(s)")
+
+    # Show already indexed files
+    if st.session_state.uploaded_files:
+        st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:10px;color:#475569;margin:4px 0;">Indexed files:</p>', unsafe_allow_html=True)
+        for fname in st.session_state.uploaded_files:
+            st.markdown(f'<p style="font-family:JetBrains Mono,monospace;font-size:10px;color:#4ade80;margin:2px 0;">⬡ {fname}</p>', unsafe_allow_html=True)
+
+    st.divider()
+    st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:11px;color:#6366f1;letter-spacing:2px;text-transform:uppercase;margin:4px 0 8px 0;">🕐 Query History</p>', unsafe_allow_html=True)
+
+    if st.session_state.query_history:
+        for i, q in enumerate(reversed(st.session_state.query_history[-10:])):
+            truncated = q[:35] + "..." if len(q) > 35 else q
+            if st.button(truncated, key=f"qhist_{i}", use_container_width=True):
+                st.session_state.selected_suggestion = q
+                st.rerun()
+    else:
+        st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:10px;color:#334155;margin:4px 0;">// no queries yet</p>', unsafe_allow_html=True)
+
+    st.divider()
+
+    # Export chat button
+    st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:11px;color:#6366f1;letter-spacing:2px;text-transform:uppercase;margin:4px 0 8px 0;">💾 Export</p>', unsafe_allow_html=True)
+
+    if st.session_state.chat_history:
+        # Build plain text export
+        export_lines = ["AgentRAG — Chat Export", "Built by Amitoj Singh", "=" * 40, ""]
+        for role, message in st.session_state.chat_history:
+            prefix = "You" if role == "user" else "AgentRAG"
+            export_lines.append(f"{prefix}:")
+            export_lines.append(message)
+            export_lines.append("")
+        export_text = "\n".join(export_lines)
+        st.download_button(
+            label="⬇  Download Chat",
+            data=export_text,
+            file_name="agentrag_chat.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
+    else:
+        st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:10px;color:#334155;margin:4px 0;">// no chat to export</p>', unsafe_allow_html=True)
+
+    st.divider()
     st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:11px;color:#6366f1;letter-spacing:2px;text-transform:uppercase;margin:4px 0 8px 0;">📋 Terminal Logs</p>', unsafe_allow_html=True)
     log_placeholder = st.empty()
 
@@ -511,18 +795,27 @@ else:
 # USER INPUT & STREAMING RESPONSE
 # -----------------------------
 
-# Handle suggestion chip click
+# Always render chat_input so it appears after suggestion completes
+typed_prompt = st.chat_input("Ask anything about your knowledge base...")
+
+# Use suggestion if clicked, otherwise use typed input
 if st.session_state.selected_suggestion:
     prompt = st.session_state.selected_suggestion
     st.session_state.selected_suggestion = None
 else:
-    prompt = st.chat_input("Ask anything about your knowledge base...")
+    prompt = typed_prompt
 
 if prompt:
 
     # Clear welcome screen by adding to history
     st.session_state.chat_history.append(("user", prompt))
     st.session_state.query_count += 1
+
+    # Add to query history (avoid duplicates, keep last 10)
+    if prompt not in st.session_state.query_history:
+        st.session_state.query_history.append(prompt)
+        if len(st.session_state.query_history) > 10:
+            st.session_state.query_history.pop(0)
 
     # Add current question to conversation memory
     st.session_state.full_messages.append(HumanMessage(content=prompt))
@@ -536,9 +829,25 @@ if prompt:
         with st.status("⬡  Routing query through agent graph...", expanded=False) as status:
             ui_log("Graph invoked — routing query")
 
-            # Pass last 10 messages for conversation memory
-            # Sliding window prevents exceeding LLM context limits
-            memory_window = st.session_state.full_messages[-10:]
+            # Build clean memory window for Groq tool calling
+            # Groq fails if history contains:
+            # 1. ToolMessages (raw retrieval results)
+            # 2. AIMessages with tool_calls (prior routing decisions)
+            # Only pass plain HumanMessages and plain AIMessages (text only)
+            from langchain_core.messages import ToolMessage
+            clean_history = []
+            for m in st.session_state.full_messages[-10:]:
+                if isinstance(m, ToolMessage):
+                    continue  # skip tool results
+                if isinstance(m, AIMessage) and m.tool_calls:
+                    continue  # skip AI messages that contain tool calls
+                clean_history.append(m)
+
+            # Always ensure current question is the last message
+            if not clean_history or clean_history[-1].content != prompt:
+                clean_history.append(HumanMessage(content=prompt))
+
+            memory_window = clean_history
             ui_log(f"Memory: {len(memory_window)} messages in context")
 
             result = app.invoke({
@@ -617,31 +926,21 @@ if prompt:
 
         # ── Show source citations below answer ──
         if sources:
+            from urllib.parse import urlparse
+            links_html = ""
+            for src in sources:
+                if src.startswith("http"):
+                    domain = urlparse(src).netloc.replace("www.", "")
+                    links_html += f"<a href='{src}' target='_blank' class='source-link'>⬡ {domain}</a>"
+                else:
+                    links_html += f"<span class='source-file'>⬡ {src}</span>"
             st.markdown(
-                "<div style='margin-top:12px;padding-top:8px;border-top:1px solid #1e293b;'>"
-                "<span style='font-family:JetBrains Mono,monospace;font-size:10px;"
-                "color:#475569;letter-spacing:1px;text-transform:uppercase;'>Sources</span>"
-                "</div>",
+                f"<div class='source-section'>"
+                f"<div class='source-label'>Sources</div>"
+                f"{links_html}"
+                f"</div>",
                 unsafe_allow_html=True
             )
-            for src in sources:
-                # Show as link if URL, plain text if local file
-                if src.startswith("http"):
-                    # Extract domain name for display
-                    from urllib.parse import urlparse
-                    domain = urlparse(src).netloc.replace("www.", "")
-                    st.markdown(
-                        f"<a href='{src}' target='_blank' style='font-family:JetBrains Mono,monospace;"
-                        f"font-size:10px;color:#6366f1;text-decoration:none;display:block;"
-                        f"margin-top:4px;'>⬡ {domain}</a>",
-                        unsafe_allow_html=True
-                    )
-                else:
-                    st.markdown(
-                        f"<span style='font-family:JetBrains Mono,monospace;font-size:10px;"
-                        f"color:#475569;display:block;margin-top:4px;'>⬡ {src}</span>",
-                        unsafe_allow_html=True
-                    )
 
         ui_log("Answer complete")
         render_logs()
