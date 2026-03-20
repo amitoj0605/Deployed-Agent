@@ -1,17 +1,20 @@
+# agent/generate_query_or_respond.py
+import os
 from langgraph.graph import MessagesState
-from langchain_ollama import ChatOllama
+from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage
-
 from agent.retriever_tool import retriever_tool
+from dotenv import load_dotenv
 
+load_dotenv()
 
-# 3b is used ONLY for routing — it's much better at tool calling than 1.5b.
-# Answer generation still uses 1.5b so overall speed stays fast.
-# num_predict=100 is enough — routing just needs to emit a tool call or short reply.
-response_model = ChatOllama(
-    model="qwen2.5:3b",
+# Groq's llama-3.1-8b-instant is extremely fast at tool calling
+# num_predict equivalent is handled by max_tokens in Groq
+response_model = ChatGroq(
+    model="llama-3.1-8b-instant",
     temperature=0,
-    num_predict=100,
+    max_tokens=150,
+    api_key=os.getenv("GROQ_API_KEY")
 )
 
 
@@ -19,7 +22,6 @@ def generate_query_or_respond(state: MessagesState):
     """
     Decide whether to answer directly or call the retriever tool.
     """
-
     system_prompt = SystemMessage(
         content=(
             "You are an AI assistant with a retriever_tool to search a knowledge base.\n"
@@ -30,9 +32,6 @@ def generate_query_or_respond(state: MessagesState):
     )
 
     messages = [system_prompt] + state["messages"]
-
     model_with_tools = response_model.bind_tools([retriever_tool])
-
     response = model_with_tools.invoke(messages)
-
     return {"messages": [response]}

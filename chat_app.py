@@ -1,6 +1,9 @@
 import streamlit as st
 from langchain_core.messages import HumanMessage, AIMessage
-from langchain_ollama import ChatOllama
+import os
+from langchain_groq import ChatGroq
+from dotenv import load_dotenv
+load_dotenv()
 from utils.logger import log
 import time
 
@@ -334,10 +337,11 @@ def load_graph():
 
 @st.cache_resource
 def load_streaming_llm():
-    return ChatOllama(
-        model="qwen2.5:1.5b",
+    return ChatGroq(
+        model="llama-3.1-8b-instant",
         temperature=0,
-        num_predict=150,
+        max_tokens=300,
+        api_key=os.getenv("GROQ_API_KEY")
     )
 
 app = load_graph()

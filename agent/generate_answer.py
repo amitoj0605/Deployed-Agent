@@ -1,13 +1,18 @@
+# agent/generate_answer.py
+import os
 import time
 from utils.logger import log
-from langchain_ollama import ChatOllama
+from langchain_groq import ChatGroq
+from dotenv import load_dotenv
 
-# Used only as a fallback (non-streaming path).
-# Streaming is handled directly in chat_app.py for faster perceived speed.
-response_model = ChatOllama(
-    model="qwen2.5:1.5b",
+load_dotenv()
+
+# Fallback model — not used in graph, only GENERATE_PROMPT is imported by chat_app.py
+response_model = ChatGroq(
+    model="llama-3.1-8b-instant",
     temperature=0,
-    num_predict=300,
+    max_tokens=300,
+    api_key=os.getenv("GROQ_API_KEY")
 )
 
 GENERATE_PROMPT = (
@@ -21,34 +26,14 @@ GENERATE_PROMPT = (
 
 
 def generate_answer(state):
-
     log("Node: generate_answer started")
-
     start = time.time()
-
     messages = state["messages"]
-
-    # first message = user question
     question = messages[0].content
-
-    # last message = retriever output
-    context = messages[-1].content
-
-    # 2000 chars: enough context for quality answers without overloading the model
-    context = context[:2000]
-
+    context = messages[-1].content[:2000]
     log(f"Context length: {len(context)} characters")
-
-    prompt = GENERATE_PROMPT.format(
-        question=question,
-        context=context
-    )
-
+    prompt = GENERATE_PROMPT.format(question=question, context=context)
     response = response_model.invoke(prompt)
-
-    llm_time = time.time() - start
-    log(f"LLM response time: {llm_time:.2f}s")
-
+    log(f"LLM response time: {time.time() - start:.2f}s")
     log("Final answer generated")
-
     return {"messages": [response]}

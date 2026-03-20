@@ -3,7 +3,7 @@ import time
 from langchain.tools import tool
 
 from vectorstore.faiss_store import FaissRetriever
-from embeddings.ollama_embeddings import EmbeddingService
+from embeddings.embed import EmbeddingService
 
 from utils.logger import log
 
