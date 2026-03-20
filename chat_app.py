@@ -354,6 +354,139 @@ div[data-testid="stHorizontalBlock"] button:hover {
     color: #a5b4fc !important;
     background: #1e1b4b !important;
 }
+
+/* ── Header compact ── */
+.agent-header {
+    padding: 16px 8px 12px 8px !important;
+    margin-bottom: 16px !important;
+}
+
+/* ── User chat bubble ── */
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+    background: #0f0f1a !important;
+    border: 1px solid #1e1b4b !important;
+    border-radius: 12px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 8px !important;
+}
+
+/* ── Assistant chat bubble ── */
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
+    background: #0a0a14 !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 12px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 8px !important;
+}
+
+/* ── Fix chat input border — remove pink/red ── */
+[data-testid="stChatInput"] textarea {
+    background: #111827 !important;
+    color: #e2e8f0 !important;
+    border: none !important;
+    font-family: 'Syne', sans-serif !important;
+}
+[data-testid="stBottom"] {
+    background: #0a0a0f !important;
+    border-top: 1px solid #1e293b !important;
+    padding-top: 8px !important;
+}
+div[data-testid="stChatInput"] {
+    border: 1px solid #374151 !important;
+    border-radius: 12px !important;
+    background: #111827 !important;
+}
+div[data-testid="stChatInput"]:focus-within {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.15) !important;
+}
+
+/* ── File uploader — dark themed ── */
+[data-testid="stFileUploader"] {
+    background: #0f172a !important;
+    border: 1px dashed #1e293b !important;
+    border-radius: 10px !important;
+    padding: 8px !important;
+}
+[data-testid="stFileUploader"] section {
+    background: transparent !important;
+    border: none !important;
+    padding: 8px !important;
+}
+[data-testid="stFileUploader"] section > div {
+    background: transparent !important;
+}
+[data-testid="stFileUploader"] span {
+    color: #475569 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 10px !important;
+}
+[data-testid="stFileUploaderDropzoneInstructions"] {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 10px !important;
+    color: #475569 !important;
+}
+[data-testid="stFileUploaderDropzoneInstructions"] span {
+    font-size: 10px !important;
+}
+/* Browse files button */
+[data-testid="stFileUploaderDropzone"] button {
+    background: #1e1b4b !important;
+    border: 1px solid #312e81 !important;
+    color: #a5b4fc !important;
+    font-size: 10px !important;
+    padding: 4px 12px !important;
+    border-radius: 6px !important;
+}
+/* Uploaded file pill */
+[data-testid="stFileUploaderFile"] {
+    background: #0f172a !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 6px !important;
+}
+[data-testid="stFileUploaderFileName"] {
+    color: #a5b4fc !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 10px !important;
+}
+[data-testid="stFileUploaderFileData"] {
+    color: #475569 !important;
+    font-size: 9px !important;
+}
+
+/* ── Source citations ── */
+.source-section {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #1e293b;
+}
+.source-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #334155;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.source-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #6366f1;
+    text-decoration: none;
+    display: inline-block;
+    margin-right: 12px;
+    margin-top: 2px;
+    transition: color 0.2s;
+}
+.source-link:hover { color: #a5b4fc; }
+.source-file {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #475569;
+    display: inline-block;
+    margin-right: 12px;
+    margin-top: 2px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -585,12 +718,15 @@ else:
 # USER INPUT & STREAMING RESPONSE
 # -----------------------------
 
-# Handle suggestion chip click
+# Always render chat_input so it appears after suggestion completes
+typed_prompt = st.chat_input("Ask anything about your knowledge base...")
+
+# Use suggestion if clicked, otherwise use typed input
 if st.session_state.selected_suggestion:
     prompt = st.session_state.selected_suggestion
     st.session_state.selected_suggestion = None
 else:
-    prompt = st.chat_input("Ask anything about your knowledge base...")
+    prompt = typed_prompt
 
 if prompt:
 
@@ -707,31 +843,21 @@ if prompt:
 
         # ── Show source citations below answer ──
         if sources:
+            from urllib.parse import urlparse
+            links_html = ""
+            for src in sources:
+                if src.startswith("http"):
+                    domain = urlparse(src).netloc.replace("www.", "")
+                    links_html += f"<a href='{src}' target='_blank' class='source-link'>⬡ {domain}</a>"
+                else:
+                    links_html += f"<span class='source-file'>⬡ {src}</span>"
             st.markdown(
-                "<div style='margin-top:12px;padding-top:8px;border-top:1px solid #1e293b;'>"
-                "<span style='font-family:JetBrains Mono,monospace;font-size:10px;"
-                "color:#475569;letter-spacing:1px;text-transform:uppercase;'>Sources</span>"
-                "</div>",
+                f"<div class='source-section'>"
+                f"<div class='source-label'>Sources</div>"
+                f"{links_html}"
+                f"</div>",
                 unsafe_allow_html=True
             )
-            for src in sources:
-                # Show as link if URL, plain text if local file
-                if src.startswith("http"):
-                    # Extract domain name for display
-                    from urllib.parse import urlparse
-                    domain = urlparse(src).netloc.replace("www.", "")
-                    st.markdown(
-                        f"<a href='{src}' target='_blank' style='font-family:JetBrains Mono,monospace;"
-                        f"font-size:10px;color:#6366f1;text-decoration:none;display:block;"
-                        f"margin-top:4px;'>⬡ {domain}</a>",
-                        unsafe_allow_html=True
-                    )
-                else:
-                    st.markdown(
-                        f"<span style='font-family:JetBrains Mono,monospace;font-size:10px;"
-                        f"color:#475569;display:block;margin-top:4px;'>⬡ {src}</span>",
-                        unsafe_allow_html=True
-                    )
 
         ui_log("Answer complete")
         render_logs()
