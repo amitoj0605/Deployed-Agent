@@ -18,11 +18,37 @@ response_model = ChatGroq(
 )
 
 
+# Phrases that should NEVER trigger retrieval
+CONVERSATIONAL_PHRASES = [
+    "hi", "hello", "hey", "how are you", "what's up", "whats up",
+    "good morning", "good evening", "good night", "thanks", "thank you",
+    "bye", "goodbye", "who are you", "what can you do", "help",
+    "ok", "okay", "cool", "nice", "great", "awesome"
+]
+
+
+def is_conversational(text: str) -> bool:
+    """Returns True if the message is a greeting or small talk."""
+    lowered = text.lower().strip().rstrip("!?.")
+    return lowered in CONVERSATIONAL_PHRASES
+
+
 def generate_query_or_respond(state: MessagesState):
     """
     Decide whether to answer directly or call the retriever tool.
     Receives full conversation history via state["messages"] for memory.
     """
+    messages = state["messages"]
+
+    # Get the latest user message
+    last_message = messages[-1].content if messages else ""
+
+    # Fast path — skip LLM entirely for conversational messages
+    # Saves a full Groq API call (~1-2s) for simple greetings
+    if is_conversational(last_message):
+        ui_response = response_model.invoke(messages)
+        return {"messages": [ui_response]}
+
     system_prompt = SystemMessage(
         content=(
             "You are an AI assistant with a retriever_tool to search a knowledge base.\n"
@@ -33,7 +59,7 @@ def generate_query_or_respond(state: MessagesState):
         )
     )
 
-    messages = [system_prompt] + state["messages"]
+    messages_with_system = [system_prompt] + messages
     model_with_tools = response_model.bind_tools([retriever_tool])
-    response = model_with_tools.invoke(messages)
+    response = model_with_tools.invoke(messages_with_system)
     return {"messages": [response]}

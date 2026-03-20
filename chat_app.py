@@ -564,11 +564,16 @@ if prompt:
                     context = parsed.get("text", "")
                     num_chunks = len(parsed.get("chunks", []))
                     sources = parsed.get("sources", [])
+                    chunks = parsed.get("chunks", [])
                     retrieved = True
                     st.session_state.retrieval_count += 1
                     ui_log(f"Retrieval triggered — {num_chunks} chunks fetched")
                     ui_log(f"Sources: {sources}")
                     ui_log(f"Context length: {len(context)} chars")
+                    # Log each chunk preview in debug panel
+                    for ci, chunk in enumerate(chunks):
+                        preview = chunk[:120].replace("\n", " ")
+                        ui_log(f"  Chunk {ci+1}: {preview}...")
                 except Exception:
                     context = raw
                     sources = []
