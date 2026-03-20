@@ -1,25 +1,34 @@
 # loaders/web_loaders.py
 import os
+import json
 import requests
 from bs4 import BeautifulSoup, SoupStrainer
 from langchain_core.documents import Document
 
 os.environ["USER_AGENT"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
 
-URLS = [
-    "https://www.ibm.com/think/topics/agentic-ai-vs-generative-ai",
-    "https://www.cognigy.com/agentic-ai/generative-ai-vs-agentic-ai",
-    "https://www.geeksforgeeks.org/artificial-intelligence/gen-ai-vs-ai-agents-vs-agentic-ai/",
-]
+# Load URLs from config file instead of hardcoding
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "configs", "urls.json")
 
-# Removed Adobe URL — blocks scrapers consistently
+def load_urls():
+    try:
+        with open(CONFIG_PATH, "r") as f:
+            return json.load(f).get("urls", [])
+    except Exception as e:
+        print(f"Could not load urls.json: {e}")
+        return []
 
 
 def load_web_documents():
     documents = []
+    urls = load_urls()
     strainer = SoupStrainer(["article", "main", "section", "p"])
 
-    for url in URLS:
+    if not urls:
+        print("No URLs found in configs/urls.json")
+        return documents
+
+    for url in urls:
         print(f"Loading: {url}")
         try:
             response = requests.get(url, timeout=10, headers={
