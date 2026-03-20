@@ -487,6 +487,43 @@ div[data-testid="stChatInput"]:focus-within {
     margin-right: 12px;
     margin-top: 2px;
 }
+
+/* ── Query history buttons ── */
+[data-testid="stSidebar"] [data-testid="stButton"] button[kind="secondary"] {
+    background: transparent !important;
+    border: 1px solid #1e293b !important;
+    color: #64748b !important;
+    font-size: 10px !important;
+    text-align: left !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    margin-bottom: 3px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+[data-testid="stSidebar"] [data-testid="stButton"] button[kind="secondary"]:hover {
+    border-color: #6366f1 !important;
+    color: #a5b4fc !important;
+    background: #0f0f1a !important;
+}
+
+/* ── Download button ── */
+[data-testid="stDownloadButton"] button {
+    background: #0f172a !important;
+    border: 1px solid #1e293b !important;
+    color: #64748b !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 10px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s !important;
+    width: 100% !important;
+}
+[data-testid="stDownloadButton"] button:hover {
+    border-color: #6366f1 !important;
+    color: #a5b4fc !important;
+    background: #1e1b4b !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -532,6 +569,9 @@ if "selected_suggestion" not in st.session_state:
 if "uploaded_files" not in st.session_state:
     # Tracks filenames already indexed — prevents duplicate ingestion
     st.session_state.uploaded_files = set()
+if "query_history" not in st.session_state:
+    # Stores last 10 queries for quick re-run from sidebar
+    st.session_state.query_history = []
 
 # -----------------------------
 # SIDEBAR
@@ -557,6 +597,7 @@ with st.sidebar:
         st.session_state.full_messages = []
         st.session_state.selected_suggestion = None
         st.session_state.uploaded_files = set()
+        st.session_state.query_history = []
         st.rerun()
 
     st.divider()
@@ -629,6 +670,42 @@ with st.sidebar:
         st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:10px;color:#475569;margin:4px 0;">Indexed files:</p>', unsafe_allow_html=True)
         for fname in st.session_state.uploaded_files:
             st.markdown(f'<p style="font-family:JetBrains Mono,monospace;font-size:10px;color:#4ade80;margin:2px 0;">⬡ {fname}</p>', unsafe_allow_html=True)
+
+    st.divider()
+    st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:11px;color:#6366f1;letter-spacing:2px;text-transform:uppercase;margin:4px 0 8px 0;">🕐 Query History</p>', unsafe_allow_html=True)
+
+    if st.session_state.query_history:
+        for i, q in enumerate(reversed(st.session_state.query_history[-10:])):
+            truncated = q[:35] + "..." if len(q) > 35 else q
+            if st.button(truncated, key=f"qhist_{i}", use_container_width=True):
+                st.session_state.selected_suggestion = q
+                st.rerun()
+    else:
+        st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:10px;color:#334155;margin:4px 0;">// no queries yet</p>', unsafe_allow_html=True)
+
+    st.divider()
+
+    # Export chat button
+    st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:11px;color:#6366f1;letter-spacing:2px;text-transform:uppercase;margin:4px 0 8px 0;">💾 Export</p>', unsafe_allow_html=True)
+
+    if st.session_state.chat_history:
+        # Build plain text export
+        export_lines = ["AgentRAG — Chat Export", "Built by Amitoj Singh", "=" * 40, ""]
+        for role, message in st.session_state.chat_history:
+            prefix = "You" if role == "user" else "AgentRAG"
+            export_lines.append(f"{prefix}:")
+            export_lines.append(message)
+            export_lines.append("")
+        export_text = "\n".join(export_lines)
+        st.download_button(
+            label="⬇  Download Chat",
+            data=export_text,
+            file_name="agentrag_chat.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
+    else:
+        st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:10px;color:#334155;margin:4px 0;">// no chat to export</p>', unsafe_allow_html=True)
 
     st.divider()
     st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:11px;color:#6366f1;letter-spacing:2px;text-transform:uppercase;margin:4px 0 8px 0;">📋 Terminal Logs</p>', unsafe_allow_html=True)
@@ -733,6 +810,12 @@ if prompt:
     # Clear welcome screen by adding to history
     st.session_state.chat_history.append(("user", prompt))
     st.session_state.query_count += 1
+
+    # Add to query history (avoid duplicates, keep last 10)
+    if prompt not in st.session_state.query_history:
+        st.session_state.query_history.append(prompt)
+        if len(st.session_state.query_history) > 10:
+            st.session_state.query_history.pop(0)
 
     # Add current question to conversation memory
     st.session_state.full_messages.append(HumanMessage(content=prompt))
