@@ -1,6 +1,7 @@
 # agent/retriever_tool.py
 import time
-from langchain.tools import tool
+from langchain.tools import StructuredTool
+from langchain_core.tools import BaseTool
 from vectorstore.faiss_store import FaissRetriever
 from embeddings.embed import EmbeddingService
 from utils.logger import log
@@ -11,18 +12,12 @@ retriever = FaissRetriever(embedding_service)
 
 
 def get_retriever() -> FaissRetriever:
-    """
-    Returns the current retriever instance.
-    chat_app.py uses this to call add_documents() when user uploads a file.
-    """
+    """Returns the current retriever instance for file upload feature."""
     return retriever
 
 
-@tool
-def retriever_tool(query: str):
-    """
-    Search the knowledge base and return relevant document chunks.
-    """
+def _retrieve(query: str) -> dict:
+    """Core retrieval logic — separated from tool wrapper."""
     log("Retriever tool invoked")
     start = time.time()
     docs = retriever.retrieve(query, top_k=3)
@@ -47,6 +42,11 @@ def retriever_tool(query: str):
         "sources": sources
     }
 
-# Set explicit name AFTER function is defined
-# Prevents KeyError on Streamlit Cloud where module path becomes the tool name
-retriever_tool.name = "retriever_tool"
+
+# Use StructuredTool.from_function with explicit name
+# This avoids the @tool decorator registering with module path on Streamlit Cloud
+retriever_tool = StructuredTool.from_function(
+    func=_retrieve,
+    name="retriever_tool",
+    description="Search the knowledge base and return relevant document chunks.",
+)
