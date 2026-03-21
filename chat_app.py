@@ -14,8 +14,13 @@ try:
 except Exception:
     pass
 from utils.logger import log
-from agent.retriever_tool import get_retriever
 from agent.generate_answer import GENERATE_PROMPT
+
+# Only import get_retriever on local — avoids KeyError on Streamlit Cloud
+import os as _os
+IS_LOCAL = not _os.path.exists("/mount/src")
+if IS_LOCAL:
+    from agent.retriever_tool import get_retriever
 import time
 
 # -----------------------------
@@ -614,14 +619,18 @@ with st.sidebar:
     st.divider()
 
     st.divider()
-    st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:11px;color:#6366f1;letter-spacing:2px;text-transform:uppercase;margin:4px 0 8px 0;">📁 Upload Documents</p>', unsafe_allow_html=True)
 
-    uploaded = st.file_uploader(
-        "Upload PDF or TXT",
-        type=["pdf", "txt"],
-        accept_multiple_files=True,
-        label_visibility="collapsed"
-    )
+    if IS_LOCAL:
+        st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:11px;color:#6366f1;letter-spacing:2px;text-transform:uppercase;margin:4px 0 8px 0;">📁 Upload Documents</p>', unsafe_allow_html=True)
+        uploaded = st.file_uploader(
+            "Upload PDF or TXT",
+            type=["pdf", "txt"],
+            accept_multiple_files=True,
+            label_visibility="collapsed"
+        )
+    else:
+        uploaded = None
+        st.markdown('<p style="font-family:JetBrains Mono,monospace;font-size:10px;color:#334155;margin:4px 0;">📁 File upload available in local version only.</p>', unsafe_allow_html=True)
 
     if uploaded:
         from split.splitter import split_documents
