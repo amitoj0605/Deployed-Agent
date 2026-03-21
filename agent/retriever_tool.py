@@ -18,7 +18,7 @@ def get_retriever() -> FaissRetriever:
     return retriever
 
 
-@tool
+@tool(name="retriever_tool")
 def retriever_tool(query: str):
     """
     Search the knowledge base and return relevant document chunks.
