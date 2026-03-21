@@ -1,7 +1,6 @@
 # agent/retriever_tool.py
 import time
-from langchain.tools import StructuredTool
-from langchain_core.tools import BaseTool
+from langchain_core.tools import StructuredTool
 from vectorstore.faiss_store import FaissRetriever
 from embeddings.embed import EmbeddingService
 from utils.logger import log
