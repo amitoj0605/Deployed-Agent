@@ -4,7 +4,18 @@ import os
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 load_dotenv()
+
+# On Streamlit Cloud, secrets are in st.secrets not .env
+# This ensures GROQ_API_KEY is available as an env var in both environments
+try:
+    import streamlit as _st
+    if "GROQ_API_KEY" in _st.secrets:
+        os.environ["GROQ_API_KEY"] = _st.secrets["GROQ_API_KEY"]
+except Exception:
+    pass
 from utils.logger import log
+from agent.retriever_tool import get_retriever
+from agent.generate_answer import GENERATE_PROMPT
 import time
 
 # -----------------------------
@@ -615,7 +626,6 @@ with st.sidebar:
     if uploaded:
         from split.splitter import split_documents
         from langchain_core.documents import Document
-        from agent.retriever_tool import get_retriever
         import tempfile, os
 
         new_files = [f for f in uploaded if f.name not in st.session_state.uploaded_files]

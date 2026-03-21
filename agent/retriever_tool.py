@@ -18,7 +18,7 @@ def get_retriever() -> FaissRetriever:
     return retriever
 
 
-@tool(name="retriever_tool")
+@tool
 def retriever_tool(query: str):
     """
     Search the knowledge base and return relevant document chunks.
@@ -46,3 +46,7 @@ def retriever_tool(query: str):
         "text": "\n\n".join(cleaned_chunks),
         "sources": sources
     }
+
+# Set explicit name AFTER function is defined
+# Prevents KeyError on Streamlit Cloud where module path becomes the tool name
+retriever_tool.name = "retriever_tool"
