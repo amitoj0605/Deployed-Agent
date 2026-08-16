@@ -13,7 +13,7 @@ load_dotenv()
 # llama-3.3-70b-versatile has significantly better tool calling than 8b-instant
 # It correctly generates JSON tool calls instead of XML format
 response_model = ChatGroq(
-    model="llama-3.3-70b-versatile",
+    model="openai/gpt-oss-120b",
     temperature=0,
     max_tokens=150,
     api_key=os.getenv("GROQ_API_KEY")
